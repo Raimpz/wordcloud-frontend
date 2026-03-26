@@ -1,121 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from 'react';
+import FileUpload from './components/FileUpload';
+import { motion } from 'framer-motion';
+import { FileText } from 'lucide-react';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
+
+  const handleUploadSuccess = (documentId: string) => {
+    setActiveDocumentId(documentId);
+  };
+
+  const handleReset = () => {
+    setActiveDocumentId(null);
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="min-h-screen font-sans text-slate-900 selection:bg-blue-200">
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center">
+          <FileText className="w-6 h-6 text-blue-600 mr-2" />
+          <h1 className="text-xl font-bold tracking-tight">WordCloud</h1>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </nav>
 
-      <div className="ticks"></div>
+      <main className="max-w-6xl mx-auto px-4 py-12">
+        {!activeDocumentId ? (
+          <FileUpload onUploadSuccess={handleUploadSuccess} />
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="space-y-6"
+          >
+            <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">Processing Document</h3>
+                <p className="text-sm text-slate-500 font-mono mt-1">ID: {activeDocumentId}</p>
+              </div>
+              <button onClick={handleReset} className="text-sm font-medium text-blue-600 hover:underline">Upload Another</button>
+            </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 p-8 bg-white rounded-2xl shadow-sm border border-slate-100 min-h-[400px] flex items-center justify-center text-slate-400">
+                Word Cloud Visualization Area
+              </div>
+              <div className="p-8 bg-white rounded-2xl shadow-sm border border-slate-100 min-h-[400px] flex items-center justify-center text-slate-400">
+                Statistics Table Area
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
