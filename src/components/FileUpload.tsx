@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { UploadCloud, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { documentApi } from '../api/apiClient';
 
 interface FileUploadProps {
     onUploadSuccess: (documentId: string) => void;
+    onProcessStart: () => boolean;
 }
 
-export default function FileUpload({onUploadSuccess}: FileUploadProps) {
+export default function FileUpload({ onUploadSuccess, onProcessStart }: FileUploadProps) {
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -30,11 +32,11 @@ export default function FileUpload({onUploadSuccess}: FileUploadProps) {
     const handleUpload = async () => {
         if (!file) return;
 
+        onProcessStart();
         setIsUploading(true);
         setError(null);
 
         try {
-            const { documentApi } = await import('../api/apiClient');
             const documentId = await documentApi.uploadFile(file);
 
             onUploadSuccess(documentId);
