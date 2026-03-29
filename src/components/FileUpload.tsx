@@ -6,9 +6,10 @@ import { documentApi } from '../api/apiClient';
 interface FileUploadProps {
     onUploadSuccess: (documentId: string) => void;
     onProcessStart: () => boolean;
+    onUploadProgress?: (percent: number) => void;
 }
 
-export default function FileUpload({ onUploadSuccess, onProcessStart }: FileUploadProps) {
+export default function FileUpload({ onUploadSuccess, onProcessStart, onUploadProgress }: FileUploadProps) {
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -37,7 +38,9 @@ export default function FileUpload({ onUploadSuccess, onProcessStart }: FileUplo
         setError(null);
 
         try {
-            const documentId = await documentApi.uploadFile(file);
+            const documentId = await documentApi.uploadFile(file, (percent) => {
+                onUploadProgress?.(percent);
+            });
 
             onUploadSuccess(documentId);
         } catch (err) {
