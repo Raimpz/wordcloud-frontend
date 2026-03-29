@@ -40,7 +40,7 @@ export default function StatisticsPanel({ documentId, isSubmitted }: StatisticsP
         } finally {
             setIsLoading(false);
         }
-    }, [documentId]);
+    }, [isSubmitted]);
 
     useEffect(() => {
         if (isSubmitted === true) {
