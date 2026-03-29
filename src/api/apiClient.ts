@@ -11,6 +11,13 @@ export interface DocumentStatus {
     processedChunks: number;
 }
 
+export interface WordStat {
+    id: number;
+    word: string;
+    count: number;
+    documentId: string;
+}
+
 export const documentApi = {
     uploadFile: async (file: File, onProgress?: (percent: number) => void) => {
         const formData = new FormData();
@@ -35,8 +42,8 @@ export const documentApi = {
         return response.data;
     },
 
-    getStatistics: async (documentId: string) => {
-        const response = await apiClient.get(`/${documentId}/statistics`);
+    getStatistics: async (documentId: string): Promise<WordStat[]> => {
+        const response = await apiClient.get<WordStat[]>(`/${documentId}/statistics`);
 
         return response.data;
     }

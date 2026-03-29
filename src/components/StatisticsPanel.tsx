@@ -1,55 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Loader2 } from 'lucide-react';
-import { documentApi } from '../api/apiClient';
-
-interface WordCount {
-    id: number;
-    word: string;
-    count: number;
-}
+import { Loader2 } from 'lucide-react';
+import type { WordStat } from '../api/apiClient';
 
 interface StatisticsPanelProps {
-    documentId: string;
-    isSubmitted?: boolean;
+    words: WordStat[];
+    isLoading: boolean;
+    error: string | null;
 }
 
-export default function StatisticsPanel({ documentId, isSubmitted }: StatisticsPanelProps) {
-    const [words, setWords] = useState<WordCount[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const fetchStatistics = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const data = await documentApi.getStatistics(documentId);
-
-            if (data.length === 0) {
-                setError("No words found in the document.");
-                setWords([]);
-
-                return;
-            }
-
-            const sortedData = data.sort((a: WordCount, b: WordCount) => b.count - a.count);
-
-            setWords(sortedData);
-        } catch (err) {
-            setError("Failed to fetch statistics");
-        } finally {
-            setIsLoading(false);
-        }
-    }, [isSubmitted]);
-
-    useEffect(() => {
-        if (isSubmitted === true) {
-            fetchStatistics();
-        }
-    }, [isSubmitted]);
-
+export default function StatisticsPanel({ words, isLoading, error }: StatisticsPanelProps) {
     return (
-        <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-[500px]">
+        <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-[700px]">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-slate-800">Word Frequencies</h3>
             </div>
@@ -68,10 +28,10 @@ export default function StatisticsPanel({ documentId, isSubmitted }: StatisticsP
                         {words.map((item, index) => (
                             <li 
                                 key={item.id} 
-                                className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100 transition-colors"
+                                className="flex justify-between items-center p-2 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100 transition-colors overflow-hidden"
                             >
                                 <div className="flex items-center">
-                                    <span className="w-6 text-xs font-medium text-slate-400">{index + 1}.</span>
+                                    <span className="text-xs font-medium text-slate-400 mr-1 mt-1">{index + 1}.</span>
                                     <span className="font-medium text-slate-700">{item.word}</span>
                                 </div>
                                 <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">{item.count}</span>

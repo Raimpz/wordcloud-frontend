@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import FileUpload from './components/FileUpload';
 import StatisticsPanel from './components/StatisticsPanel';
+import WordCloudPanel from './components/WordCloudPanel';
 import { motion } from 'framer-motion';
 import { FileText, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
-import { documentApi, type DocumentStatus } from './api/apiClient';
+import { documentApi, type DocumentStatus, type WordStat } from './api/apiClient';
 
 function App() {
   const [activeDocumentId, setActiveDocumentId] = useState<string>('');
@@ -13,6 +14,9 @@ function App() {
   const [documentStatus, setDocumentStatus] = useState<DocumentStatus | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [wordStats, setWordStats] = useState<WordStat[]>([]);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   const clearPolling = () => {
     if (pollingRef.current) {
@@ -44,6 +48,9 @@ function App() {
     setIsSubmitted(false);
     setDocumentStatus(null);
     setUploadProgress(0);
+    setWordStats([]);
+    setStatsError(null);
+    setIsStatsLoading(false);
   };
 
   const handleLookupSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -71,12 +78,52 @@ function App() {
     };
 
     pollStatus();
-    pollingRef.current = setInterval(pollStatus, 2000);
+    pollingRef.current = setInterval(pollStatus, 500);
 
     return () => {
       clearPolling();
     };
   }, [activeDocumentId]);
+
+  useEffect(() => {
+    if (!isSubmitted || !activeDocumentId) return;
+
+    let cancelled = false;
+
+    const fetchStats = async () => {
+      setIsStatsLoading(true);
+      setStatsError(null);
+
+      try {
+        const data = await documentApi.getStatistics(activeDocumentId);
+
+        if (cancelled) return;
+
+        if (data.length === 0) {
+          setStatsError('No words found in the document.');
+          setWordStats([]);
+
+          return;
+        }
+
+        const sorted = [...data].sort((a, b) => b.count - a.count);
+
+        setWordStats(sorted);
+      } catch {
+          setStatsError('Failed to fetch statistics.');
+      } finally {
+        if (!cancelled) {
+          setIsStatsLoading(false);
+        }
+      }
+    };
+
+    fetchStats();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSubmitted, activeDocumentId]);
 
   const getStatusBadge = () => {
     if (!documentStatus) return null;
@@ -124,7 +171,7 @@ function App() {
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-4 py-12">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         {!showNextView ? (
           <div className="space-y-8">
             <FileUpload
@@ -182,11 +229,11 @@ function App() {
               </form>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 p-8 bg-white rounded-2xl shadow-sm border border-slate-100 min-h-[400px] flex items-center justify-center text-slate-400">
-                Word Cloud Visualization Area
-              </div>
-                <StatisticsPanel documentId={activeDocumentId} isSubmitted={isSubmitted} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <WordCloudPanel wordStats={wordStats} isLoading={isStatsLoading} />
+                </div>
+                <StatisticsPanel words={wordStats} isLoading={isStatsLoading} error={statsError} />
             </div>
           </motion.div>
         )}
