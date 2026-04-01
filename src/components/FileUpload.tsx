@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { UploadCloud, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { documentApi } from '../api/apiClient';
+import { documentApi, getErrorMessage } from '../api/apiClient';
+import { MAX_FILE_SIZE_BYTES } from '../constants';
+import toast from 'react-hot-toast';
 
 interface FileUploadProps {
     onUploadSuccess: (documentId: string) => void;
@@ -12,21 +14,19 @@ interface FileUploadProps {
 export default function FileUpload({ onUploadSuccess, onProcessStart, onUploadProgress }: FileUploadProps) {
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const selectedFile = e.target.files[0];
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            const selectedFile = event.target.files[0];
 
-            if (selectedFile.size > 100 * 1024 * 1024) {
-                setError("File size exceeds 100MB limit.");
+            if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+                toast.error("File size exceeds 100MB limit.");
                 setFile(null);
 
                 return;
             }
 
             setFile(selectedFile);
-            setError(null);
         }
     };
 
@@ -35,7 +35,6 @@ export default function FileUpload({ onUploadSuccess, onProcessStart, onUploadPr
 
         onProcessStart();
         setIsUploading(true);
-        setError(null);
 
         try {
             const documentId = await documentApi.uploadFile(file, (percent) => {
@@ -43,8 +42,8 @@ export default function FileUpload({ onUploadSuccess, onProcessStart, onUploadPr
             });
 
             onUploadSuccess(documentId);
-        } catch (err) {
-            setError("Failed to upload file. Please try again.");
+        } catch (error) {
+            toast.error(getErrorMessage(error, "Failed to upload file. Please try again."));
         } finally {
             setIsUploading(false);
         }
@@ -71,10 +70,6 @@ export default function FileUpload({ onUploadSuccess, onProcessStart, onUploadPr
                 <UploadCloud className="w-12 h-12 text-slate-400 mb-4" />
                 <span className="text-sm font-medium text-slate-600">{file ? file.name : "Click or drag file to this area"}</span>
             </div>
-
-            {error && (
-                <div className="mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">{error}</div>
-            )}
 
             <button
                 onClick={handleUpload}

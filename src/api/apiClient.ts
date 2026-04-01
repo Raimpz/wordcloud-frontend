@@ -18,6 +18,14 @@ export interface WordStat {
     documentId: string;
 }
 
+export function getErrorMessage(error: unknown, fallbackMessage: string): string {
+    if (axios.isAxiosError(error) && typeof error.response?.data === 'string' && error.response.data.length > 0) {
+        return error.response.data;
+    }
+
+    return fallbackMessage;
+}
+
 export const documentApi = {
     uploadFile: async (file: File, onProgress?: (percent: number) => void) => {
         const formData = new FormData();
@@ -39,6 +47,7 @@ export const documentApi = {
 
     getStatus: async (documentId: string): Promise<DocumentStatus> => {
         const response = await apiClient.get(`/${documentId}/status`);
+
         return response.data;
     },
 
@@ -46,5 +55,15 @@ export const documentApi = {
         const response = await apiClient.get<WordStat[]>(`/${documentId}/statistics`);
 
         return response.data;
-    }
+    },
+
+    updateWord: async (docId: string, wordId: number, word: string): Promise<WordStat> => {
+        const response = await apiClient.put<WordStat>(`/${docId}/words/${wordId}`, { word });
+
+        return response.data;
+    },
+
+    deleteWord: async (docId: string, wordId: number): Promise<void> => {
+        await apiClient.delete(`/${docId}/words/${wordId}`);
+    },
 };
