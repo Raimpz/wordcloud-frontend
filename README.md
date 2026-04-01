@@ -1,73 +1,73 @@
-# React + TypeScript + Vite
+# WordCloud Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React web application for uploading text files and visualizing word frequency as interactive word clouds.
 
-Currently, two official plugins are available:
+Built with React 19, TypeScript, Vite 8, and Tailwind CSS.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Prerequisites
 
-## React Compiler
+- [Node.js 22](https://nodejs.org/)
+- Running Core API backend (see below)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Local Development
 
-## Expanding the ESLint configuration
+### 1. Start the backend
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Either start the full stack via Docker:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd ../deployment-config
+docker compose up --build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Or start just the infrastructure and core-api individually:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+cd ../deployment-config
+docker compose -f docker-compose.infra.yml up
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# In another terminal:
+cd ../core-api
+./gradlew bootRun
 ```
+
+### 2. Configure environment
+
+```bash
+cp .env.example .env
+# Edit .env if your API runs on a different URL
+```
+
+### 3. Install dependencies and start
+
+```bash
+npm install
+npm run dev
+```
+
+Opens on http://localhost:5173.
+
+## Environment Variables
+
+| Variable            | Default                                       | Description      |
+|---------------------|-----------------------------------------------|------------------|
+| `VITE_API_BASE_URL` | `http://localhost:8080/api/documents`         | Backend API URL  |
+
+## Docker (Production Build)
+
+The Dockerfile creates a production build served by nginx:
+
+```bash
+docker build -t wordcloud-frontend .
+docker run -p 3000:80 wordcloud-frontend
+```
+
+To use a different API URL at build time:
+
+```bash
+docker build --build-arg VITE_API_BASE_URL=http://my-api:8080/api/documents -t wordcloud-frontend .
+```
+
+## Full Stack
+
+To run the entire application with one command, see the [deployment-config README](../deployment-config/README.md or https://github.com/Raimpz/wordcloud-deployment-config/blob/main/README.md).
