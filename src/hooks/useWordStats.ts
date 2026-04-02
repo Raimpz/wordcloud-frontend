@@ -69,7 +69,11 @@ export function useWordStats(documentId: string, isSubmitted: boolean): UseWordS
     }, [isSubmitted, documentId]);
 
     useEffect(() => {
-        if (!wordStats.length) return;
+        if (!wordStats.length) {
+            setCloudSnapshot([]);
+
+            return;
+        }
 
         const timer = setTimeout(() => {
             setCloudSnapshot(wordStats);
@@ -86,7 +90,12 @@ export function useWordStats(documentId: string, isSubmitted: boolean): UseWordS
         try {
             const updated = await documentApi.updateWord(documentIdRef.current, wordId, newWord);
 
-            setWordStats(prev => prev.map(word => word.id === wordId ? { ...word, word: updated.word } : word));
+            setWordStats(prev => {
+                const next = prev.map(word => word.id === wordId ? { ...word, word: updated.word } : word);
+                setCloudSnapshot(next);
+
+                return next;
+            });
 
             toast.success('Word updated.');
         } catch (error) {
@@ -98,7 +107,12 @@ export function useWordStats(documentId: string, isSubmitted: boolean): UseWordS
         try {
             await documentApi.deleteWord(documentIdRef.current, wordId);
 
-            setWordStats(prev => prev.filter(word => word.id !== wordId));
+            setWordStats(prev => {
+                const next = prev.filter(word => word.id !== wordId);
+                setCloudSnapshot(next);
+
+                return next;
+            });
 
             toast.success('Word deleted.');
         } catch (error) {
